@@ -1,0 +1,684 @@
+{
+	"info": {
+		"_postman_id": "694b9abd-80cc-405e-a6ff-1d13f333ce87",
+		"name": "Jira Cloud End to End",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38775756"
+	},
+	"item": [
+		{
+			"name": "End to End Flow Test",
+			"item": [
+				{
+					"name": "GetProjects",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"let projectDetails = response.values;\r",
+									"\r",
+									"const projectKeys = projectDetails.map((projectKey) => projectKey.key);\r",
+									"\r",
+									"pm.collectionVariables.set('ProjectIdMap', projectDetails[projectKeys.indexOf('TEST')].id);\r",
+									"pm.collectionVariables.set('ProjectKeyMap', projectDetails[projectKeys.indexOf('TEST')].key);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/search",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getAllIssueTypes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"const IssueTypes = response.map((value) => value.name);\r",
+									"pm.collectionVariables.set('IssueIdbyMap', response[IssueTypes.indexOf(pm.variables.get(\"Issue type\"))].id);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/issuetype/project?projectId={{ProjectIdMap}}",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"issuetype",
+								"project"
+							],
+							"query": [
+								{
+									"key": "projectId",
+									"value": "{{ProjectIdMap}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetUserAsigned",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"let desiredValues = response.map((value) => value.displayName);\r",
+									"\r",
+									"pm.collectionVariables.set('AccountIdMap', response[desiredValues.indexOf('Aniket Gapat')].accountId);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/user/assignable/multiProjectSearch?projectKeys={{ProjectKeyMap}}",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"user",
+								"assignable",
+								"multiProjectSearch"
+							],
+							"query": [
+								{
+									"key": "projectKeys",
+									"value": "{{ProjectKeyMap}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CreateIssue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"const response = pm.response.json();\r",
+									"pm.collectionVariables.set('IssueKey', response.key);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"//var title = pm.collectionVariables.replaceIn( \"{{$randomPhrase}}\");\r",
+									"pm.collectionVariables.set('IssueTitle', pm.iterationData.get(\"Issue title\"));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fields\": {\r\n    \"issuetype\": {\r\n      \"id\": \"{{IssueIdbyMap}}\"\r\n    },\r\n    \"project\": {\r\n      \"id\": \"{{ProjectIdMap}}\"\r\n    },\r\n    \"reporter\": {\r\n      \"id\": \"{{AccountIdMap}}\"\r\n    },\r\n    \"summary\": \"{{IssueTitle}}\"\r\n}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/issue",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"issue"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetIssue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"\r",
+									"pm.collectionVariables\r",
+									"pm.test(\"Validate Summary Match\", function () {\r",
+									"    pm.expect(response.fields.summary).to.eql(pm.collectionVariables.get('IssueTitle'));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/issue/{{IssueKey}}",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"issue",
+								"{{IssueKey}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ProductFeaturesStatusCode",
+			"item": [
+				{
+					"name": "GetProjectsFeatures 200",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"console.clear();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/SCRUM/features",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"SCRUM",
+								"features"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetProjectsFeatures 400",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"console.clear();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true,
+							"user-agent": true,
+							"host": true,
+							"connection": true,
+							"content-length": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/SCRUM/features",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"SCRUM",
+								"features"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetProjectsFeatures 401",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"console.clear();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {\r",
+									"    pm.response.to.have.status(401);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/SCRUM/features",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"SCRUM",
+								"features"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetProjectsFeatures 404",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"console.clear();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/SCRUMM/features",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"SCRUMM",
+								"features"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetProjectsFeatures 405",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"console.clear();"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 405\", function () {\r",
+									"    pm.response.to.have.status(405);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{jira_token}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_name}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{test_url}}/rest/api/3/project/SCRUM/features",
+							"host": [
+								"{{test_url}}"
+							],
+							"path": [
+								"rest",
+								"api",
+								"3",
+								"project",
+								"SCRUM",
+								"features"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "ProjectIdMap",
+			"value": ""
+		},
+		{
+			"key": "ProjectKeyMap",
+			"value": ""
+		},
+		{
+			"key": "IssueIdbyMap",
+			"value": ""
+		},
+		{
+			"key": "AccountIdMap",
+			"value": ""
+		},
+		{
+			"key": "IssueKey",
+			"value": ""
+		},
+		{
+			"key": "IssueTitle",
+			"value": ""
+		},
+		{
+			"key": "Issue type",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
